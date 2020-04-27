@@ -5,10 +5,10 @@ from tweepy.streaming import StreamListener
 from tweepy import OAuthHandler
 from tweepy import Stream
 
-access_token = "68000072-BRutoxqWNKTynhgHyXOFeMstjcOpr63OxOAIqyC5D"
-access_token_secret = "QarYrrGDe4lpbw8DjF6VtnPk6SwBo3MxhzEx4vsUYWNqE"
-consumer_key = "Or56hDGO11K90lFNgZ8WqbFee"
-consumer_secret = "XEb1ldIMffIDFVALmF1eDUEjb9QzQK2XbnxjXj4jwdfuoHt4OX"
+access_token = "68000072-craaf71WltY1B5HiE0qdYVtEeVEWUlrh3qlt4nJZM"
+access_token_secret = "AzktEKG0OuhckEM5XFxjMvsqeRgLMX7V33hJNQASoVS32"
+consumer_key = "3BGeBF0z0SxRFuio1lotM2jtW"
+consumer_secret = "nTJQKWcxhM9S4QRyPDsRk8y0UAxYv0oRYXu3Nc4rCXnutsfY1K"
 
 class Crawler(tweepy.StreamListener):
 
@@ -33,7 +33,7 @@ def auth():
     auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
     auth.set_access_token(access_token, access_token_secret)
 
-    api = tweepy.API(auth)
+    api = tweepy.API(auth,wait_on_rate_limit=True)
     return auth
 
 def main():
