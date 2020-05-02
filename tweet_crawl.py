@@ -1,6 +1,8 @@
 import json
 import sys
 import tweepy
+import os
+import re
 from tweepy.streaming import StreamListener
 from tweepy import OAuthHandler
 from tweepy import Stream
@@ -14,10 +16,55 @@ class Crawler(tweepy.StreamListener):
 
     def __init__(self):
         super(StreamListener, self).__init__()
-        self.save_file = open('tweets.json','w')
+        self.num_tweets = 0 # Number tracker of tweets for this run... Just for sanity checking
+        self.save_name = ''
         self.tweets = []
+        self.file_num = 0
+        # Try to pick up where we left off, if we've run this before...
+        # Check for tweets dir in the current directory
+        if os.path.isdir('./tweets'):
+            # Directory exists, find last tweets file
+            dir_list = os.listdir('./tweets')
+            sorted(dir_list)
+            # Change this to a string so we can regex it
+            dir_string = "".join([str(i) for i in dir_list])
+            # Grab for the LAST match, as this should be the largest numerically
+            s = re.search("tweets[0-9]+\.json$", dir_string)
+            # If s is empty, we haven't found a match, likely a case of either no file or just the first 'tweets.json'.
+            if s :
+                # We have a match. Grab the current numerical value of the item, update vars
+                self.file_num = int(re.search("[0-9]+", s.group()).group())
+                self.save_name = './tweets/tweets' + str(self.file_num) + '.json'
+            else:
+                # Else default
+                self.save_name = './tweets/tweets.json'
+
+        else:
+            # Directory does not exist. Create directory and first file.
+            os.mkdir('tweets')
+            self.save_name = './tweets/tweets.json'
+
+        # Open the file as append so we don't have to re-write the array each time
+        # Also so we don't have to load to prevent losing tweets from picking up the script a day later
+        self.save_file = open(self.save_name, 'a')
+            
+    def verify_save(self):
+        # Check to see if file is over 10MB (10,000,000 Bytes)
+        if os.stat(self.save_name).st_size >= 10000000:
+            # Close current file
+            self.save_file.close()
+            # Increment file number, create new file name, open new file
+            self.file_num += 1
+            self.save_name = './tweets/tweets' + str(self.file_num) + '.json'
+            self.save_file = open(self.save_name, 'a')
+        # Else, continue with current file. 
 
     def on_data(self,tweet):
+        # Empty array so we're not appending the same item over and over
+        self.tweets = []
+        self.verify_save()
+        self.num_tweets += 1
+        print("Got tweet number " + str(self.num_tweets) + " appending to: " + self.save_name) #Debug statement, just so we can see it's doing something while running...
         self.tweets.append(json.loads(tweet))
         self.save_file.write(str(tweet))
 
@@ -28,6 +75,7 @@ class Crawler(tweepy.StreamListener):
         if status == 420:
             #returning False in on_error disconnects the stream
             return False
+
 
 def auth():
     auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
@@ -40,5 +88,7 @@ def main():
     x = auth()
     myCrawler = Crawler()
     myStream = tweepy.Stream(x,listener = myCrawler)
-    myStream.filter(track=['python'])
+    myStream.filter(locations=[-180,-90,180,90])
+
+
 main()
