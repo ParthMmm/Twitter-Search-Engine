@@ -3,6 +3,7 @@ import sys
 import tweepy
 import os
 import re
+import lxml.html
 from tweepy.streaming import StreamListener
 from tweepy import OAuthHandler
 from tweepy import Stream
@@ -18,7 +19,7 @@ class Crawler(tweepy.StreamListener):
         super(StreamListener, self).__init__()
         self.num_tweets = 0 # Number tracker of tweets for this run... Just for sanity checking
         self.save_name = ''
-        self.tweets = []
+        self.tweets = [] 
         self.file_num = 0
         # Try to pick up where we left off, if we've run this before...
         # Check for tweets dir in the current directory
@@ -60,13 +61,36 @@ class Crawler(tweepy.StreamListener):
         # Else, continue with current file. 
 
     def on_data(self,tweet):
+        # tweet is string in json format
         # Empty array so we're not appending the same item over and over
         self.tweets = []
         self.verify_save()
         self.num_tweets += 1
         print("Got tweet number " + str(self.num_tweets) + " appending to: " + self.save_name) #Debug statement, just so we can see it's doing something while running...
-        self.tweets.append(json.loads(tweet))
-        self.save_file.write(str(tweet))
+        # woo = json.loads(tweet)
+        # print(type(woo))
+        dicTweet = json.loads(tweet)
+        #print(dicTweet["text"])
+        trunc = dicTweet.get("truncated", "EMPTY")
+        #print(trunc)
+        #print(type(trunc))
+        if (trunc != "EMPTY"):
+            #print(trunc)
+            self.tweets.append(dicTweet)
+            #need to fix line below to access right fields v
+            URL = dicTweet.get("url", "EMPTY") # dicTweet["entities"][urls]
+            #print(URL)
+            if (URL != "EMPTY"):
+                print(URL)
+                site = lxml.html.parse(URL)
+                urlTitle = site.find(".//title").text
+                title = "\"url_title\": " + dicTweet["url"]
+                tweetLine = str(tweet)[:-1]
+                self.save_file.write(tweetLine + "," + title)
+            self.save_file.write(str(tweet))        
+        
+
+
 
     # def on_status(self, status):
     #     print(status.text)
@@ -89,6 +113,7 @@ def main():
     myCrawler = Crawler()
     myStream = tweepy.Stream(x,listener = myCrawler)
     myStream.filter(locations=[-180,-90,180,90])
+    # myStream.filter(track=['python'], is_async = True)
 
 
 main()
