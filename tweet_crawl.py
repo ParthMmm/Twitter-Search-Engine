@@ -3,6 +3,8 @@ import sys
 import tweepy
 import os
 import re
+import urllib
+from bs4 import BeautifulSoup
 from tweepy.streaming import StreamListener
 from tweepy import OAuthHandler
 from tweepy import Stream
@@ -47,7 +49,7 @@ class Crawler(tweepy.StreamListener):
         # Open the file as append so we don't have to re-write the array each time
         # Also so we don't have to load to prevent losing tweets from picking up the script a day later
         self.save_file = open(self.save_name, 'a')
-            
+
     def verify_save(self):
         # Check to see if file is over 10MB (10,000,000 Bytes)
         if os.stat(self.save_name).st_size >= 10000000:
@@ -57,7 +59,7 @@ class Crawler(tweepy.StreamListener):
             self.file_num += 1
             self.save_name = './tweets/tweets' + str(self.file_num) + '.json'
             self.save_file = open(self.save_name, 'a')
-        # Else, continue with current file. 
+        # Else, continue with current file.
 
     def on_data(self,tweet):
         # Empty array so we're not appending the same item over and over
@@ -65,9 +67,25 @@ class Crawler(tweepy.StreamListener):
         self.verify_save()
         self.num_tweets += 1
         print("Got tweet number " + str(self.num_tweets) + " appending to: " + self.save_name) #Debug statement, just so we can see it's doing something while running...
+
+        decoded = json.loads(tweet)
+        for url in decoded["entities"]["urls"]:
+            x = url["expanded_url"]
+            #print(x)
+            response = urllib.request.urlopen(x)
+            html = response.read()
+            soup = BeautifulSoup(html,'html.parser')
+            # title = soup.html.head.title
+            title = soup.title.string
+
+            #print(x + "--" + str(title))
+            print(title)
+
+        return True
+
+
         self.tweets.append(json.loads(tweet))
         self.save_file.write(str(tweet))
-
     # def on_status(self, status):
     #     print(status.text)
 
