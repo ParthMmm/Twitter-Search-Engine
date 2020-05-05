@@ -4,6 +4,7 @@ import tweepy
 import os
 import re
 import urllib
+import http
 from bs4 import BeautifulSoup
 from tweepy.streaming import StreamListener
 from tweepy import OAuthHandler
@@ -51,6 +52,7 @@ class Crawler(tweepy.StreamListener):
         self.save_file = open(self.save_name, 'a')
 
     def verify_save(self):
+        # print(get_size(), 'bytes')
         # Check to see if file is over 10MB (10,000,000 Bytes)
         if os.stat(self.save_name).st_size >= 10000000:
             # Close current file
@@ -60,6 +62,8 @@ class Crawler(tweepy.StreamListener):
             self.save_name = './tweets/tweets' + str(self.file_num) + '.json'
             self.save_file = open(self.save_name, 'a')
         # Else, continue with current file.
+        if get_size() > 2147483648:
+            sys.exit("Reached 2gb")
 
     def on_data(self,tweet):
         # Empty array so we're not appending the same item over and over
@@ -87,7 +91,10 @@ class Crawler(tweepy.StreamListener):
 
                 #Opens url for BeautifulSoup to parse
                 try:
-                    response = urllib.request.urlopen(expanded_url)
+                    try:
+                        response = urllib.request.urlopen(expanded_url)
+                    except (http.client.IncompleteRead) as e:
+                        continue
                     html = response.read()
                     soup = BeautifulSoup(html,'html.parser')
 
@@ -109,7 +116,7 @@ class Crawler(tweepy.StreamListener):
 
             #Append title to tweet
             if(title != ""):
-                updated_tweet = tweet + "Title: " + str(title) + "test342"
+                updated_tweet = tweet + "Title: " + str(title)
 
         #No url so we proceed as normal
         else:
@@ -139,7 +146,18 @@ def main():
     x = auth()
     myCrawler = Crawler()
     myStream = tweepy.Stream(x,listener = myCrawler)
-    myStream.filter(locations=[-180,-90,180,90])
+    myStream.filter(locations=[-123.4,33.1,-86.5,47.7])
+#From stackoverflow
+def get_size(start_path = './tweets'):
+    total_size = 0
+    for dirpath, dirnames, filenames in os.walk(start_path):
+        for f in filenames:
+            fp = os.path.join(dirpath, f)
+            # skip if it is symbolic link
+            if not os.path.islink(fp):
+                total_size += os.path.getsize(fp)
+
+    return total_size
 
 
 main()
