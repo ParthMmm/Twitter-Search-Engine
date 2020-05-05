@@ -67,25 +67,69 @@ class Crawler(tweepy.StreamListener):
         self.verify_save()
         self.num_tweets += 1
         print("Got tweet number " + str(self.num_tweets) + " appending to: " + self.save_name) #Debug statement, just so we can see it's doing something while running...
-
+        title = ""
+        # decoded = json.loads(tweet)
+        # url_to_check = decoded["entities"]["urls"]
+        # if(url_to_check != "[]"):
+        #     x = url_to_check['expanded_url']
+        #     try:
+        #         response = urllib.request.urlopen(x)
+        #         html = response.read()
+        #         soup = BeautifulSoup(html,'html.parser')
+        #         title = soup.title.string
+        #     except urllib.error.HTTPError as e:
+        #         if e.code == 400:
+        #             print ("Error 400: Bad Request")
+        #         else:
+        #             print("Error: " + str(e.code))
+        url_to_check = "[]"
+        updated_tweet = ""
         decoded = json.loads(tweet)
-        for url in decoded["entities"]["urls"]:
-            x = url["expanded_url"]
-            #print(x)
-            response = urllib.request.urlopen(x)
-            html = response.read()
-            soup = BeautifulSoup(html,'html.parser')
-            # title = soup.html.head.title
-            title = soup.title.string
+        try:
+            url_to_check = decoded["entities"]["urls"]
+        except KeyError:
+            print("key error")
+        if(url_to_check != "[]"):
+            for url in decoded["entities"]["urls"]:
+                x = url["expanded_url"]
+                try:
+                    response = urllib.request.urlopen(x)
+                    html = response.read()
+                    soup = BeautifulSoup(html,'html.parser')
+                    try:
+                        if(soup.title is not None):
+                            title = soup.title.string
+                    except NameError:
+                        print("No title")
+                        title = ""
 
-            #print(x + "--" + str(title))
-            print(title)
-
-        return True
+                except urllib.error.HTTPError as e:
+                    if e.code == 400:
+                        print ("Error 400: Bad Request")
+                    else:
+                        print("HTTP Error: " + str(e.code))
+                except urllib.error.URLError as e:
+                    print("URL Error: " + str(e.reason))
+            if(title != ""):
+                updated_tweet = tweet + "Title: " + str(title) + "test342"
+        else:
+            self.tweets.append(json.loads(tweet))
+            self.save_file.write(str(tweet))
+            # for url in decoded["entities"]["urls"]:
+            #     x = url["expanded_url"]
+            #     #print(x)
+            #     response = urllib.request.urlopen(x)
+            #     html = response.read()
+            #     soup = BeautifulSoup(html,'html.parser')
+            #     # title = soup.html.head.title
+            #     title = soup.title.string
+            #
+            #     #print(x + "--" + str(title))
+            #     print(title)
 
 
         self.tweets.append(json.loads(tweet))
-        self.save_file.write(str(tweet))
+        self.save_file.write(str(updated_tweet))
     # def on_status(self, status):
     #     print(status.text)
 
