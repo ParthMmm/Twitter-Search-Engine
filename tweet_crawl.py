@@ -21,7 +21,7 @@ class Crawler(tweepy.StreamListener):
         super(StreamListener, self).__init__()
         self.num_tweets = 0 # Number tracker of tweets for this run... Just for sanity checking
         self.save_name = ''
-        self.tweets = []
+        #self.tweets = []
         self.file_num = 0
         # Try to pick up where we left off, if we've run this before...
         # Check for tweets dir in the current directory
@@ -69,16 +69,16 @@ class Crawler(tweepy.StreamListener):
 
     def on_data(self,tweet):
         # Empty array so we're not appending the same item over and over
-        self.tweets = []
+        # self.tweets = []
         self.verify_save()
         self.num_tweets += 1
         print("Got tweet number " + str(self.num_tweets) + " appending to: " + self.save_name) #Debug statement, just so we can see it's doing something while running...
 
         title = ""
-        url_to_check = "[]"
+        # url_to_check = "[]"
         updated_tweet = ""
 
-        decoded = json.loads(tweet)
+        decoded = json.loads(tweet) # DICTIONARY
 
         #Avoid KeyError from entities
         try:
@@ -87,7 +87,10 @@ class Crawler(tweepy.StreamListener):
             print("key error")
 
         #Check that url exists
-        if(url_to_check != "[]"):
+        # url_to_check is a list not a string
+        # print(type(url_to_check))
+        if url_to_check:
+            # print("2: " + url_to_check)
             for url in decoded["entities"]["urls"]:
                 expanded_url = url["expanded_url"]
 
@@ -106,7 +109,7 @@ class Crawler(tweepy.StreamListener):
                             title = soup.title.string
                     except NameError:
                         print("No title")
-                        #title = "" # redundant
+                        title = ""
 
                 except urllib.error.HTTPError as e:
                     if e.code == 400:
@@ -117,18 +120,14 @@ class Crawler(tweepy.StreamListener):
                     print("URL Error: " + str(e.reason))
 
             #Append title to tweet
-            if(title != ""):
-                decoded['title'] = title
-                r = json.dumps(decoded, separators=(',', ':'))
-                #self.tweets.append(json.loads(tweet))
-                self.save_file.write(str(r) + '\n')
-
-        #self.tweets.append(json.loads(tweet))
-        self.save_file.write(str(tweet))
-        #No url so we proceed as normal
-        #else:
-        #    self.tweets.append(json.loads(tweet))
-        #    self.save_file.write(str(tweet))
+                if(title != ""):
+                    decoded['title'] = title
+                    r = json.dumps(decoded, separators=(',', ':'))
+                    self.save_file.write(str(r) + '\n')
+                    print("ADDED TITLE TWEET")
+        else:
+            self.save_file.write(str(tweet))
+            print("ADDED TWEET")
 
 
 
