@@ -106,7 +106,7 @@ class Crawler(tweepy.StreamListener):
                             title = soup.title.string
                     except NameError:
                         print("No title")
-                        title = ""
+                        #title = "" # redundant
 
                 except urllib.error.HTTPError as e:
                     if e.code == 400:
@@ -119,17 +119,18 @@ class Crawler(tweepy.StreamListener):
             #Append title to tweet
             if(title != ""):
                 decoded['title'] = title
-                r = json.dumps(decoded)
-                self.tweets.append(json.loads(tweet))
+                r = json.dumps(decoded, separators=(',', ':'))
+                #self.tweets.append(json.loads(tweet))
                 self.save_file.write(str(r) + '\n')
 
-        #No url so we proceed as normal
-        else:
-            self.tweets.append(json.loads(tweet))
-            self.save_file.write(str(tweet))
-
-        self.tweets.append(json.loads(tweet))
+        #self.tweets.append(json.loads(tweet))
         self.save_file.write(str(tweet))
+        #No url so we proceed as normal
+        #else:
+        #    self.tweets.append(json.loads(tweet))
+        #    self.save_file.write(str(tweet))
+
+
 
     def on_error(self,status):
         if status == 420:
