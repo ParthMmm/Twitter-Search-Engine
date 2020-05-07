@@ -62,8 +62,10 @@ class Crawler(tweepy.StreamListener):
             self.save_name = './tweets/tweets' + str(self.file_num) + '.json'
             self.save_file = open(self.save_name, 'a')
         # Else, continue with current file.
+
+        #Check if directory is 2GB
         if get_size() > 2147483648:
-            sys.exit("Reached 2gb")
+            sys.exit("Reached 2GB")
 
     def on_data(self,tweet):
         # Empty array so we're not appending the same item over and over
@@ -77,6 +79,7 @@ class Crawler(tweepy.StreamListener):
         updated_tweet = ""
 
         decoded = json.loads(tweet)
+
         #Avoid KeyError from entities
         try:
             url_to_check = decoded["entities"]["urls"]
@@ -115,8 +118,6 @@ class Crawler(tweepy.StreamListener):
 
             #Append title to tweet
             if(title != ""):
-                # updated_tweet = tweet + "Title: " + str(title) + '\n'
-                new = {'title': title}
                 decoded['title'] = title
                 r = json.dumps(decoded)
                 self.tweets.append(json.loads(tweet))
@@ -126,6 +127,7 @@ class Crawler(tweepy.StreamListener):
         else:
             self.tweets.append(json.loads(tweet))
             self.save_file.write(str(tweet))
+
         self.tweets.append(json.loads(tweet))
         self.save_file.write(str(tweet))
 
@@ -147,6 +149,7 @@ def main():
     myCrawler = Crawler()
     myStream = tweepy.Stream(x,listener = myCrawler)
     myStream.filter(locations=[-123.4,33.1,-86.5,47.7])
+
 #From stackoverflow
 def get_size(start_path = './tweets'):
     total_size = 0
