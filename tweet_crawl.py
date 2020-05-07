@@ -77,7 +77,6 @@ class Crawler(tweepy.StreamListener):
         updated_tweet = ""
 
         decoded = json.loads(tweet)
-
         #Avoid KeyError from entities
         try:
             url_to_check = decoded["entities"]["urls"]
@@ -116,18 +115,19 @@ class Crawler(tweepy.StreamListener):
 
             #Append title to tweet
             if(title != ""):
-                updated_tweet = tweet + "Title: " + str(title)
+                # updated_tweet = tweet + "Title: " + str(title) + '\n'
+                new = {'title': title}
+                decoded['title'] = title
+                r = json.dumps(decoded)
+                self.tweets.append(json.loads(tweet))
+                self.save_file.write(str(r) + '\n')
 
         #No url so we proceed as normal
         else:
             self.tweets.append(json.loads(tweet))
             self.save_file.write(str(tweet))
-
-
         self.tweets.append(json.loads(tweet))
-        self.save_file.write(str(updated_tweet))
-    # def on_status(self, status):
-    #     print(status.text)
+        self.save_file.write(str(tweet))
 
     def on_error(self,status):
         if status == 420:
