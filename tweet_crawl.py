@@ -10,6 +10,8 @@ from bs4 import BeautifulSoup
 from tweepy.streaming import StreamListener
 from tweepy import OAuthHandler
 from tweepy import Stream
+from http.client import IncompleteRead
+from urllib3.exceptions import ProtocolError
 
 access_token = "68000072-craaf71WltY1B5HiE0qdYVtEeVEWUlrh3qlt4nJZM"
 access_token_secret = "AzktEKG0OuhckEM5XFxjMvsqeRgLMX7V33hJNQASoVS32"
@@ -147,10 +149,20 @@ def auth():
     return auth
 
 def main():
-    x = auth()
-    myCrawler = Crawler()
-    myStream = tweepy.Stream(x,listener = myCrawler)
-    myStream.filter(locations=[-123.4,33.1,-86.5,47.7])
+    while True:
+        try:
+            x = auth()
+            myCrawler = Crawler()
+            myStream = tweepy.Stream(x,listener = myCrawler)
+            myStream.filter(locations=[-123.4,33.1,-86.5,47.7])
+        except IncompleteRead:
+            continue
+        except ProtocolError:
+            continue
+        except Exception:
+            continue
+        except KeyboardInterrupt:
+            break
 
 #From stackoverflow
 def get_size(start_path = './tweets'):
@@ -193,6 +205,10 @@ def urlProcess(obj, decoded):
                 print("HTTP Error: " + str(e.code))
         except urllib.error.URLError as e:
             print("URL Error: " + str(e.reason))
+        except TimeoutError:
+            print("time out error")
+        except IncompleteRead:
+            print("incomplete read")
 
         #Append title to tweet
         if(title != ""):
