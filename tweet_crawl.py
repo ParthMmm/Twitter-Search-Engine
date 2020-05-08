@@ -5,6 +5,7 @@ import os
 import re
 import urllib
 import http
+import threading
 from bs4 import BeautifulSoup
 from tweepy.streaming import StreamListener
 from tweepy import OAuthHandler
@@ -74,9 +75,9 @@ class Crawler(tweepy.StreamListener):
         self.num_tweets += 1
         print("Got tweet number " + str(self.num_tweets) + " appending to: " + self.save_name) #Debug statement, just so we can see it's doing something while running...
 
-        title = ""
+        # title = ""
         # url_to_check = "[]"
-        updated_tweet = ""
+        # updated_tweet = ""
 
         decoded = json.loads(tweet) # DICTIONARY
 
@@ -90,44 +91,45 @@ class Crawler(tweepy.StreamListener):
         # url_to_check is a list not a string
         # print(type(url_to_check))
         if url_to_check:
-            # print("2: " + url_to_check)
-            for url in decoded["entities"]["urls"]:
-                expanded_url = url["expanded_url"]
+            # spawn thread and do processing
+            thread = threading.Thread(target=urlProcess(self, decoded))
+            # for url in decoded["entities"]["urls"]:
+            #     expanded_url = url["expanded_url"]
 
                 #Opens url for BeautifulSoup to parse
-                try:
-                    try:
-                        response = urllib.request.urlopen(expanded_url)
-                    except (http.client.IncompleteRead) as e:
-                        continue
-                    html = response.read()
-                    soup = BeautifulSoup(html,'html.parser')
+            #     try:
+            #         try:
+            #             response = urllib.request.urlopen(expanded_url)
+            #         except (http.client.IncompleteRead) as e:
+            #             continue
+            #         html = response.read()
+            #         soup = BeautifulSoup(html,'html.parser')
 
-                    #Get title
-                    try:
-                        if(soup.title is not None):
-                            title = soup.title.string
-                    except NameError:
-                        print("No title")
-                        title = ""
+            #         #Get title
+            #         try:
+            #             if(soup.title is not None):
+            #                 title = soup.title.string
+            #         except NameError:
+            #             print("No title")
+            #             title = ""
 
-                except urllib.error.HTTPError as e:
-                    if e.code == 400:
-                        print ("Error 400: Bad Request")
-                    else:
-                        print("HTTP Error: " + str(e.code))
-                except urllib.error.URLError as e:
-                    print("URL Error: " + str(e.reason))
+            #     except urllib.error.HTTPError as e:
+            #         if e.code == 400:
+            #             print ("Error 400: Bad Request")
+            #         else:
+            #             print("HTTP Error: " + str(e.code))
+            #     except urllib.error.URLError as e:
+            #         print("URL Error: " + str(e.reason))
 
-            #Append title to tweet
-                if(title != ""):
-                    decoded['title'] = title
-                    r = json.dumps(decoded, separators=(',', ':'))
-                    self.save_file.write(str(r) + '\n')
-                    print("ADDED TITLE TWEET")
+            # #Append title to tweet
+            #     if(title != ""):
+            #         decoded['title'] = title
+            #         r = json.dumps(decoded, separators=(',', ':'))
+            #         self.save_file.write(str(r) + '\n')
+            #         print("ADDED TITLE TWEET")
         else:
             self.save_file.write(str(tweet))
-            print("ADDED TWEET")
+            #print("ADDED TWEET")
 
 
 
@@ -161,6 +163,45 @@ def get_size(start_path = './tweets'):
                 total_size += os.path.getsize(fp)
 
     return total_size
+
+def urlProcess(obj, decoded):
+    title = ""
+    for url in decoded["entities"]["urls"]:
+        expanded_url = url["expanded_url"]
+
+        #Opens url for BeautifulSoup to parse
+        try:
+            try:
+                response = urllib.request.urlopen(expanded_url)
+            except (http.client.IncompleteRead) as e:
+                continue
+            html = response.read()
+            soup = BeautifulSoup(html,'html.parser')
+
+            #Get title
+            try:
+                if(soup.title is not None):
+                    title = soup.title.string
+            except NameError:
+                print("No title")
+                title = ""
+
+        except urllib.error.HTTPError as e:
+            if e.code == 400:
+                print ("Error 400: Bad Request")
+            else:
+                print("HTTP Error: " + str(e.code))
+        except urllib.error.URLError as e:
+            print("URL Error: " + str(e.reason))
+
+        #Append title to tweet
+        if(title != ""):
+            decoded['title'] = title
+            r = json.dumps(decoded, separators=(',', ':'))
+            obj.save_file.write(str(r) + '\n')
+            #print("ADDED TITLE TWEET")
+
+    return
 
 
 main()
