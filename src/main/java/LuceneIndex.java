@@ -78,7 +78,7 @@ public class LuceneIndex {
         for (JSONObject json : contentsAsJsonObjects) {
             try{
                 String text = json.getString("text");
-                String name = json.getJSONObject("user").getString("name");
+                String user = json.getJSONObject("user").getString("name");
                 String date = json.getString("created_at");
 //            if(json.getJSONObject("place").getJSONObject("bounding_box").getString("coordinates[0]") != null){
 //                 location = json.getJSONObject("place").getJSONObject("bounding_box").getString("coordinates[0]");
@@ -86,7 +86,8 @@ public class LuceneIndex {
                 if(json.getString("title") != null){
                     title = json.getString("title");
                 }
-                System.out.println(title);
+                Tweet newTweet = new Tweet(user,title,date,text,location);
+                Document newDoc = createDocument(newTweet);
 
             }catch(Exception e){
 //                System.out.println(e);
@@ -94,5 +95,14 @@ public class LuceneIndex {
 
         }
 
+    }
+    public static Document createDocument(Tweet tweet){
+        Document doc = new Document();
+        doc.add(new TextField("user", tweet.user, Field.Store.YES));
+        doc.add(new TextField("title", tweet.title, Field.Store.YES));
+        doc.add(new TextField("date", tweet.date, Field.Store.YES));
+        doc.add(new TextField("text", tweet.text, Field.Store.YES));
+        doc.add(new TextField("location", tweet.location, Field.Store.YES));
+        return doc;
     }
 }
