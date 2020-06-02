@@ -58,42 +58,57 @@ class Tweet{
 public class LuceneIndex {
 
     public static void main(String[] args) throws IOException, ParseException {
+        Analyzer analyzer = new StandardAnalyzer();
+        String dir = "/Users/parthmangrola/Documents/index";
+        Directory indexDir = FSDirectory.open(Paths.get(dir));
+        IndexWriterConfig luceneConfig = new IndexWriterConfig(analyzer);
+        IndexWriter indexWriter = new IndexWriter(indexDir, luceneConfig);
 
         Path currentDir = Paths.get(".");
-        System.out.println(currentDir.toAbsolutePath());
+        File folder = new File("/Users/parthmangrola/Documents/tweets/");
+        File[] files = folder.listFiles();
+        for (File file: files != null ? files : new File[0])
+        {
+            System.out.println(file);
+            BufferedReader reader = new BufferedReader(new FileReader(file));
+            ArrayList<JSONObject> contentsAsJsonObjects = new ArrayList<JSONObject>();
 
-        File file = new File("/Users/parthmangrola/Documents/School/Spring20/indexer/src/main/java/tweets.json");
-        BufferedReader reader = new BufferedReader(new FileReader(file));
-        ArrayList<JSONObject> contentsAsJsonObjects = new ArrayList<JSONObject>();
-
-        int count = 0;
-        for (String line; (line = reader.readLine()) != null;) {
-            count++;
-            contentsAsJsonObjects.add(new JSONObject(line));
-
-        }
-        String location ="";
-        String title = "";
-
-        for (JSONObject json : contentsAsJsonObjects) {
+            int count = 0;
             try{
-                String text = json.getString("text");
-                String user = json.getJSONObject("user").getString("name");
-                String date = json.getString("created_at");
+                for (String line; (line = reader.readLine()) != null;) {
+                    count++;
+                    contentsAsJsonObjects.add(new JSONObject(line));
+                }
+            }catch(Exception e){
+                System.out.println(e);
+            }
+
+            String location ="";
+            String title = "";
+
+            for (JSONObject json : contentsAsJsonObjects) {
+                try{
+                    String text = json.getString("text");
+                    String user = json.getJSONObject("user").getString("name");
+                    String date = json.getString("created_at");
 //            if(json.getJSONObject("place").getJSONObject("bounding_box").getString("coordinates[0]") != null){
 //                 location = json.getJSONObject("place").getJSONObject("bounding_box").getString("coordinates[0]");
 //            }
-                if(json.getString("title") != null){
-                    title = json.getString("title");
-                }
-                Tweet newTweet = new Tweet(user,title,date,text,location);
-                Document newDoc = createDocument(newTweet);
+                    if(json.getString("title") != null){
+                        title = json.getString("title");
+                    }
+                    Tweet newTweet = new Tweet(user,title,date,text,location);
+                    Document newDoc = createDocument(newTweet);
+                    indexWriter.addDocument(newDoc);
 
-            }catch(Exception e){
+                }catch(Exception e){
 //                System.out.println(e);
-            }
+                }
 
+            }
         }
+        indexWriter.close();
+
 
     }
     public static Document createDocument(Tweet tweet){
