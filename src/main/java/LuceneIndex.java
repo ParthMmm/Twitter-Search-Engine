@@ -64,31 +64,42 @@ public class LuceneIndex {
         IndexWriterConfig luceneConfig = new IndexWriterConfig(analyzer);
         IndexWriter indexWriter = new IndexWriter(indexDir, luceneConfig);
 
-        Path currentDir = Paths.get(".");
-        File folder = new File("/Users/parthmangrola/Documents/tweets/");
+        //Folder of tweets
+        File folder = new File("/Users/parthmangrola/documents/tweets");
         File[] files = folder.listFiles();
+
+        int errors = 0;
+        int tcount = 0;
+
+        //Iterate through each file
         for (File file: files != null ? files : new File[0])
         {
-            System.out.println(file);
             BufferedReader reader = new BufferedReader(new FileReader(file));
-            ArrayList<JSONObject> contentsAsJsonObjects = new ArrayList<JSONObject>();
+            JSONArray arr = new JSONArray();
 
-            int count = 0;
+            //Add each line to JSONArray
             try{
                 for (String line; (line = reader.readLine()) != null;) {
-                    count++;
-                    contentsAsJsonObjects.add(new JSONObject(line));
+
+                    if(!line.trim().equals("")){
+                        arr.put(new JSONObject(line.trim()));
+                    }
                 }
             }catch(Exception e){
                 System.out.println(e);
+                errors += 1;
             }
 
             String location ="";
             String title = "";
 
-            for (JSONObject json : contentsAsJsonObjects) {
+            //Iterate through the JSONArray where each JSONObject is a tweet. Add document to index
+            for (int j = 0; j < arr.length(); j++) {
+                JSONObject json = arr.getJSONObject(j);
+                tcount++;
                 try{
                     String text = json.getString("text");
+
                     String user = json.getJSONObject("user").getString("name");
                     String date = json.getString("created_at");
 //            if(json.getJSONObject("place").getJSONObject("bounding_box").getString("coordinates[0]") != null){
@@ -97,9 +108,11 @@ public class LuceneIndex {
                     if(json.getString("title") != null){
                         title = json.getString("title");
                     }
+
                     Tweet newTweet = new Tweet(user,title,date,text,location);
                     Document newDoc = createDocument(newTweet);
                     indexWriter.addDocument(newDoc);
+
 
                 }catch(Exception e){
 //                System.out.println(e);
@@ -107,6 +120,9 @@ public class LuceneIndex {
 
             }
         }
+        System.out.println(errors);
+        System.out.println(tcount);
+
         indexWriter.close();
 
 
