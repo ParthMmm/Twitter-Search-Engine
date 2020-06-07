@@ -125,6 +125,33 @@ public class LuceneIndex {
 
         indexWriter.close();
 
+                // Now search the index:
+        DirectoryReader indexReader = DirectoryReader.open(directory);
+        IndexSearcher indexSearcher = new IndexSearcher(indexReader);
+
+        String[] fields = {"title", "content"};
+        Map<String, Float> boosts = new HashMap<>();
+        boosts.put(fields[0], 1.0f);
+        boosts.put(fields[1], 0.5f);
+        MultiFieldQueryParser parser = new MultiFieldQueryParser(fields, analyzer, boosts);
+        Query query = parser.parse("UCR");
+        // Query query = parser.parse("UCR discussion");
+        // QueryParser parser = new QueryParser("content", analyzer);
+        // Query query = parser.parse("(title:ucr)^1.0 (content:ucr)^0.5");
+        System.out.println(query.toString());
+        int topHitCount = 100;
+        ScoreDoc[] hits = indexSearcher.search(query, topHitCount).scoreDocs;
+
+        // Iterate through the results:
+        for (int rank = 0; rank < hits.length; ++rank) {
+            Document hitDoc = indexSearcher.doc(hits[rank].doc);
+            System.out.println((rank + 1) + " (score:" + hits[rank].score + ") --> " +
+                               hitDoc.get("title") + " - " + hitDoc.get("content"));
+            // System.out.println(indexSearcher.explain(query, hits[rank].doc));
+        }
+        indexReader.close();
+        directory.close();
+
 
     }
     public static Document createDocument(Tweet tweet){
