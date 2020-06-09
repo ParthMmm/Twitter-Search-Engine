@@ -102,9 +102,9 @@ public class LuceneIndex {
 
                     String user = json.getJSONObject("user").getString("name");
                     String date = json.getString("created_at");
-//            if(json.getJSONObject("place").getJSONObject("bounding_box").getString("coordinates[0]") != null){
-//                 location = json.getJSONObject("place").getJSONObject("bounding_box").getString("coordinates[0]");
-//            }
+             if(json.getJSONObject("place").getJSONObject("bounding_box").getString("coordinates[0]") != null){
+                  location = json.getJSONObject("place").getJSONObject("bounding_box").getString("coordinates[0]");
+             }
                     if(json.getString("title") != null){
                         title = json.getString("title");
                     }
