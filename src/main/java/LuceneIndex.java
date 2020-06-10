@@ -45,13 +45,15 @@ class Tweet{
     public String date;
     public String text;
     public String location;
+    public String followers;
 
-    Tweet(String u, String t, String d, String txt, String l){
+    Tweet(String u, String t, String d, String txt, String l, String f){
         this.user = u;
         this.title = t;
         this.date = d;
         this.text = txt;
         this.location = l;
+        this.followers = f;
     }
 }
 
@@ -70,8 +72,10 @@ public class LuceneIndex {
         //Folder of tweets
         //File folder = new File("/Users/parthmangrola/documents/tweets");
         File folder = new File("/Users/cristianfranco/Documents/tweets");
+        //Path currentDir = Paths.get(".");
+        //File folder = new File("/Users/parthmangrola/documents/twe");
         File[] files = folder.listFiles();
-
+        
         int errors = 0;
         int tcount = 0;
 
@@ -79,24 +83,24 @@ public class LuceneIndex {
         for (File file: files != null ? files : new File[0]) {
             BufferedReader reader = new BufferedReader(new FileReader(file));
             JSONArray arr = new JSONArray();
-
-            //Add each line to JSONArray
             try{
                 for (String line; (line = reader.readLine()) != null;) {
 
                     if(!line.trim().equals("")){
                         arr.put(new JSONObject(line.trim()));
+
                     }
+                    
                 }
             }catch(Exception e){
-                System.out.println(e);
+                System.out.println("87" + e);
                 errors += 1;
             }
+
 
             String location ="";
             String title = "";
 
-            //Iterate through the JSONArray where each JSONObject is a tweet. Add document to index
             for (int j = 0; j < arr.length(); j++) {
                 // JSONObject json = arr.getJSONObject(j);
                 // tcount++;
@@ -107,20 +111,23 @@ public class LuceneIndex {
                     String text = json.getString("text");
                     String user = json.getJSONObject("user").getString("name");
                     String date = json.getString("created_at");
-//            if(json.getJSONObject("place").getJSONObject("bounding_box").getString("coordinates[0]") != null){
-//                 location = json.getJSONObject("place").getJSONObject("bounding_box").getString("coordinates[0]");
-//            }
+                    String followers = Integer.toString(json.getJSONObject("user").getInt("followers_count"));
+
+//                    JSONArray coords = json.getJSONObject("place").getJSONObject("bounding_box").getJSONArray("coordinates");
+                    if(json.getJSONObject("place").getString("full_name") != null){
+                        location = json.getJSONObject("place").getString("full_name");
+                    }
                     if(json.getString("title") != null){
                         title = json.getString("title");
                     }
 
-                    Tweet newTweet = new Tweet(user,title,date,text,location);
+                    Tweet newTweet = new Tweet(user,title,date,text,location, followers);
                     Document newDoc = createDocument(newTweet);
                     indexWriter.addDocument(newDoc);
 
 
                 }catch(Exception e){
-                    System.out.println(e);
+//                    System.out.println(e);
                 }
 
             }
@@ -128,6 +135,7 @@ public class LuceneIndex {
 
         System.out.println(errors);
         System.out.println(tcount);
+
 
         indexWriter.close();
     }
@@ -140,6 +148,9 @@ public class LuceneIndex {
         doc.add(new TextField("date", tweet.date, Field.Store.YES));
         doc.add(new TextField("text", tweet.text, Field.Store.YES));
         doc.add(new TextField("location", tweet.location, Field.Store.YES));
+        doc.add(new TextField("followers", tweet.followers, Field.Store.YES));
+
         return doc;
     }
 }
+
