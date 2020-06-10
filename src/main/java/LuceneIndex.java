@@ -59,7 +59,6 @@ public class LuceneIndex {
 
     public static void main(String[] args) throws IOException, ParseException {
 
-        //System.out.println("Working Directory = " + System.getProperty("user.dir"));
         // FIX dir to work without having to manually change path
         Analyzer analyzer = new StandardAnalyzer();
         //String dir = "/Users/parthmangrola/Documents/index";
@@ -77,8 +76,7 @@ public class LuceneIndex {
         int tcount = 0;
 
         //Iterate through each file
-        for (File file: files != null ? files : new File[0])
-        {
+        for (File file: files != null ? files : new File[0]) {
             BufferedReader reader = new BufferedReader(new FileReader(file));
             JSONArray arr = new JSONArray();
 
@@ -107,7 +105,6 @@ public class LuceneIndex {
                     tcount++;
                     System.out.println(tcount);
                     String text = json.getString("text");
-
                     String user = json.getJSONObject("user").getString("name");
                     String date = json.getString("created_at");
 //            if(json.getJSONObject("place").getJSONObject("bounding_box").getString("coordinates[0]") != null){
@@ -123,18 +120,19 @@ public class LuceneIndex {
 
 
                 }catch(Exception e){
-//                System.out.println(e);
+                    System.out.println(e);
                 }
 
             }
         }
+
         System.out.println(errors);
         System.out.println(tcount);
 
         indexWriter.close();
-
-
     }
+
+
     public static Document createDocument(Tweet tweet){
         Document doc = new Document();
         doc.add(new TextField("user", tweet.user, Field.Store.YES));
