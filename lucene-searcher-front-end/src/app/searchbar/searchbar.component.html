@@ -1,0 +1,26 @@
+<div style="text-align:center;">
+  <input size="100%" #sBox (keyup.enter)="search(sBox.value)" placeholder="Search"/>
+  <button (click)="search(sBox.value)">Search</button>
+</div>
+
+
+<div style="marginLeft:0px;">
+  <ul class="tweets">
+    Format:
+    <li>
+      <span class="result"><b>id</b></span>
+      <b>TITLE</b><span> - </span><b>user</b> at <b>date</b><span>,
+      </span><b>location</b><span>: </span><b>body</b>
+    </li>
+  </ul>
+</div>
+
+<h3>Results:</h3>
+<ul class="tweets" *ngIf="tweets">
+  <li *ngFor="let tweet of tweets">
+    <span class="result">{{tweet.id}}</span>
+    {{tweet.title | uppercase}}<span> - </span>{{tweet.user}} at
+    <span>{{tweet.date}}, </span>{{tweet.location}}<span>: </span>
+    {{tweet.body}}
+  </li>
+</ul>

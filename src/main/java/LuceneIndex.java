@@ -60,20 +60,27 @@ class Tweet{
 public class LuceneIndex {
 
     public static void main(String[] args) throws IOException, ParseException {
+
+        // FIX dir to work without having to manually change path
         Analyzer analyzer = new StandardAnalyzer();
-        String dir = "/Users/parthmangrola/Documents/index";
+        //String dir = "/Users/parthmangrola/Documents/index";
+        String dir = "/Users/cristianfranco/Documents/index";
         Directory indexDir = FSDirectory.open(Paths.get(dir));
         IndexWriterConfig luceneConfig = new IndexWriterConfig(analyzer);
         IndexWriter indexWriter = new IndexWriter(indexDir, luceneConfig);
 
-        Path currentDir = Paths.get(".");
-        File folder = new File("/Users/parthmangrola/documents/twe");
+        //Folder of tweets
+        //File folder = new File("/Users/parthmangrola/documents/tweets");
+        File folder = new File("/Users/cristianfranco/Documents/tweets");
+        //Path currentDir = Paths.get(".");
+        //File folder = new File("/Users/parthmangrola/documents/twe");
         File[] files = folder.listFiles();
         
         int errors = 0;
         int tcount = 0;
-        for (File file: files != null ? files : new File[0])
-        {
+
+        //Iterate through each file
+        for (File file: files != null ? files : new File[0]) {
             BufferedReader reader = new BufferedReader(new FileReader(file));
             JSONArray arr = new JSONArray();
             try{
@@ -95,9 +102,12 @@ public class LuceneIndex {
             String title = "";
 
             for (int j = 0; j < arr.length(); j++) {
-                JSONObject json = arr.getJSONObject(j);
-                tcount++;
+                // JSONObject json = arr.getJSONObject(j);
+                // tcount++;
                 try{
+                    JSONObject json = arr.getJSONObject(j);
+                    tcount++;
+                    System.out.println(tcount);
                     String text = json.getString("text");
                     String user = json.getJSONObject("user").getString("name");
                     String date = json.getString("created_at");
@@ -122,14 +132,15 @@ public class LuceneIndex {
 
             }
         }
+
         System.out.println(errors);
         System.out.println(tcount);
 
 
         indexWriter.close();
-
-
     }
+
+
     public static Document createDocument(Tweet tweet){
         Document doc = new Document();
         doc.add(new TextField("user", tweet.user, Field.Store.YES));
