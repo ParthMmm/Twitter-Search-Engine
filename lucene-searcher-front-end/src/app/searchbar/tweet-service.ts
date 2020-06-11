@@ -11,6 +11,6 @@ export class TweetService {
   constructor(private http: HttpClient) { }
 
   getTweets(q: string="Riverside"): Observable<Tweet[]> {
-    return this.http.get<Tweet[]>(this.url + '/tweets?query=' + q);
+    return this.http.get<Tweet[]>(this.url + '/api/tweets?query=' + q);
   }
 }
