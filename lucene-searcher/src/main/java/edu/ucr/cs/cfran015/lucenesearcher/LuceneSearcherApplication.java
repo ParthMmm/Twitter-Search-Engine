@@ -68,6 +68,29 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.charset.StandardCharsets;
+
+class Tweet{
+    public int id;
+    public String user;
+    public String title;
+    public String date;
+    public String body;
+    public String location;
+
+    Tweet(int id, String u, String t, String d, String txt){
+        this.id = id;
+        this.user = u;
+        this.title = t;
+        this.date = d;
+        this.body = txt;
+        //this.location = l;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("Tweet[id=%d, title=%s, body=%s, user=%s, date=%s, location=%s]", id, title, body, user, date, location);
+    }
+}
               
 
 @SpringBootApplication
@@ -85,10 +108,12 @@ public class LuceneSearcherApplication {
 	// }
 
 	@GetMapping("/tweets")
-	public String tweets(@RequestParam(value = "query", defaultValue = "car") String queryIn) {
+	public List<Tweet> tweets(@RequestParam(value = "query", defaultValue = "car") String queryIn) {
 		//return String.format("Looking for %s", query);
 
-        String results = "";
+        //String results = "";
+
+        List<Tweet> tweets = new ArrayList<Tweet>();
 
         try {
 
@@ -102,16 +127,17 @@ public class LuceneSearcherApplication {
         IndexSearcher indexSearcher = new IndexSearcher(indexReader);
 
         // Tweet newTweet = new Tweet(user,title,date,text,location);
-        String[] fields = {"user", "title", "date", "text", "location"};
+        String[] fields = {"user", "title", "date", "text"};
+        // , "location"
         Map<String, Float> boosts = new HashMap<>();
         // boosts.put(fields[0], 1.0f);
         // boosts.put(fields[1], 0.5f);
         // weights
-        boosts.put(fields[0], 0.2f);
-        boosts.put(fields[1], 0.2f);
+        boosts.put(fields[0], 0.25f);
+        boosts.put(fields[1], 0.25f);
         boosts.put(fields[2], 0.1f);
-        boosts.put(fields[3], 0.3f);
-        boosts.put(fields[4], 0.2f);
+        boosts.put(fields[3], 0.4f);
+        //boosts.put(fields[4], 0.2f);
         MultiFieldQueryParser parser = new MultiFieldQueryParser(fields, analyzer, boosts);
         Query query = parser.parse(queryIn);
         //Query query = parser.parse("UCR");
@@ -125,31 +151,40 @@ public class LuceneSearcherApplication {
         // Iterate through the results:
         for (int rank = 0; rank < hits.length; ++rank) {
             Document hitDoc = indexSearcher.doc(hits[rank].doc);
-            // System.out.println((rank + 1) + " (score:" + hits[rank].score + ") --> " +
-            //                    hitDoc.get("title") + " - " + hitDoc.get("content"));
 
-            // System.out.println((rank + 1) + " (score:" + hits[rank].score + ") --> " +
+            Tweet tempTweet = new Tweet( (rank + 1), hitDoc.get("user"), hitDoc.get("title"),
+                hitDoc.get("date"), hitDoc.get("text") );
+
+            
+            
+            //hitDoc.get("location")
+
+            tweets.add(tempTweet);
+
+
+
+            //tweets += "Tweet[id=" + tempTweet.id + ", title=" + tempTweet.title + ", body=" + tempTweet.body + ", user=" + tempTweet.user + ", date=" + tempTweet.date + "]";
+            // + ", location=" + tempTweet.location + 
+            //System.out.println(tweets);
+            // results += (rank + 1) + " (score:" + hits[rank].score + ") --> " +
             //                    hitDoc.get("user") + " - " + hitDoc.get("title") + " - "
             //                    + hitDoc.get("date") + " - " + hitDoc.get("text") + " - "
-            //                    + hitDoc.get("location"));
-            results += (rank + 1) + " (score:" + hits[rank].score + ") --> " +
-                               hitDoc.get("user") + " - " + hitDoc.get("title") + " - "
-                               + hitDoc.get("date") + " - " + hitDoc.get("text") + " - "
-                               + hitDoc.get("location");
-
-            // System.out.println(indexSearcher.explain(query, hits[rank].doc));
+            //                    + hitDoc.get("location");
         }
         indexReader.close();
         indexDir.close();
 
-        return String.format(results);
+        //return String.format(results);
+
+        return tweets;
         
         } catch(Exception e){
                 System.out.println(e);
             }
 
 
-    return String.format(results);
+    //return String.format(results);
+    return tweets;
 
 	}
 
