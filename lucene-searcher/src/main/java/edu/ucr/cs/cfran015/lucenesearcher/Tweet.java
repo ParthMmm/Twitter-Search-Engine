@@ -22,7 +22,7 @@ public class Tweet {
 
     public Tweet(){}
 
-    public Tweet(int id, String title, String body, String user, String date, String location) {
+    public Tweet(int id, String user, String title, String date, String body, String location) {
         this.id = id;
         this.user = user;
         this.title = title;
