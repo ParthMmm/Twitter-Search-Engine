@@ -13,10 +13,10 @@ from tweepy import Stream
 from http.client import IncompleteRead
 from urllib3.exceptions import ProtocolError
 
-access_token = "68000072-craaf71WltY1B5HiE0qdYVtEeVEWUlrh3qlt4nJZM"
-access_token_secret = "AzktEKG0OuhckEM5XFxjMvsqeRgLMX7V33hJNQASoVS32"
-consumer_key = "3BGeBF0z0SxRFuio1lotM2jtW"
-consumer_secret = "nTJQKWcxhM9S4QRyPDsRk8y0UAxYv0oRYXu3Nc4rCXnutsfY1K"
+access_token = ""
+access_token_secret = ""
+consumer_key = ""
+consumer_secret = ""
 
 class Crawler(tweepy.StreamListener):
 
